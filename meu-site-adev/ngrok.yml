@@ -1,0 +1,8 @@
+version: "2"
+authtoken: 33dkCJomoB3keoXOYFaErxJrLeV_534s4pPR1DW5x4P1L7U6G
+
+tunnels:
+  meu-site-principal:
+    proto: http
+    addr: meu-site-nginx:80
+    domain: brinda-wretched-stagily.ngrok-free.dev # <-- AQUI ESTÁ A CORREÇÃO

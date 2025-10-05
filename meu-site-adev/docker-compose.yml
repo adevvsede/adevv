@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  meu-backend:
+    build: ./backend
+    container_name: meu_backend
+    restart: unless-stopped
+    networks:
+      - minha_rede_interna
+    volumes:
+      - ./data:/app/data
+
+  meu-site-nginx:
+    image: nginx:alpine
+    container_name: meu_site_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    networks:
+      - minha_rede_interna
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - meu-backend
+
+  ngrok:
+    image: ngrok/ngrok:alpine
+    container_name: ngrok
+    restart: always
+    ports:
+      - "4040:4040"
+    networks:
+      - minha_rede_interna
+    env_file:
+      - .env
+    volumes:
+      - ./ngrok.yml:/etc/ngrok.yml
+    command: start --all --config /etc/ngrok.yml
+    depends_on:
+      - meu-site-nginx
+
+networks:
+  minha_rede_interna:
+    driver: bridge

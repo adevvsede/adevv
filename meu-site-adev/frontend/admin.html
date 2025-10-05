@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Programação</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f0f2f5; padding: 2rem; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1, h2 { font-family: 'Anton', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; color: #1a1a1a; }
+        h1 { text-align: center; margin-bottom: 2rem; font-size: 2.5rem; }
+        h2 { font-size: 1.5rem; border-bottom: 2px solid #f0f2f5; padding-bottom: 0.5rem; margin-top: 2rem; }
+        input, button, textarea { padding: 0.75rem; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; margin-bottom: 1rem; font-family: 'Poppins', sans-serif; }
+        textarea { resize: vertical; min-height: 80px; }
+        button { background: #007BFF; color: white; cursor: pointer; border: none; font-weight: 700; transition: background-color 0.2s; }
+        button:hover { background: #0056b3; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: flex-end; }
+        .auth, .content { margin-bottom: 2rem; }
+        .item-list { list-style: none; padding: 0; }
+        .item-list li { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-bottom: 1px solid #eee; }
+        .item-list li:last-child { border-bottom: none; }
+        .item-list button { background: #e74c3c; font-size: 0.8rem; padding: 0.4rem 0.8rem; width: auto; margin-bottom: 0; }
+        .item-list button:hover { background: #c0392b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Painel de Administração</h1>
+
+    <div class="auth" id="auth-section">
+        <h2>Autenticação</h2>
+        <input type="password" id="admin-password" placeholder="Senha do administrador">
+        <button onclick="login()">Acessar</button>
+    </div>
+
+    <div class="content" id="content-section" style="display: none;">
+        <h2>Gerenciar Cultos</h2>
+        <ul id="cultos-list" class="item-list"></ul>
+        <form id="add-culto-form">
+            <div class="form-grid">
+                <input type="text" id="culto-nome" placeholder="Nome do Culto" required>
+                <input type="text" id="culto-dia" placeholder="Dia (ex: Terça-feira)" required>
+                <input type="text" id="culto-horario" placeholder="Horário (ex: 19:30h)" required>
+                <button type="submit">Adicionar Culto</button>
+            </div>
+        </form>
+
+        <h2>Gerenciar Eventos</h2>
+        <ul id="eventos-list" class="item-list"></ul>
+        <form id="add-evento-form">
+            <input type="text" id="evento-nome" placeholder="Nome do Evento" required>
+            <input type="text" id="evento-data" placeholder="Data (ex: 25 de Dezembro)" required>
+            <textarea id="evento-descricao" placeholder="Descrição do evento"></textarea>
+            <button type="submit">Adicionar Evento</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const passwordInput = document.getElementById('admin-password');
+    const authSection = document.getElementById('auth-section');
+    const contentSection = document.getElementById('content-section');
+    
+    const cultosList = document.getElementById('cultos-list');
+    const addCultoForm = document.getElementById('add-culto-form');
+    
+    const eventosList = document.getElementById('eventos-list');
+    const addEventoForm = document.getElementById('add-evento-form');
+    
+    // CORREÇÃO CRÍTICA: Usar caminho relativo para a API
+    const API_URL = '/api'; 
+    let ADMIN_PASSWORD = '';
+
+    function login() {
+        ADMIN_PASSWORD = passwordInput.value;
+        if (!ADMIN_PASSWORD) {
+            alert('Por favor, insira a senha.');
+            return;
+        }
+        authSection.style.display = 'none';
+        contentSection.style.display = 'block';
+        loadAllData();
+    }
+
+    function loadAllData() {
+        loadCultos();
+        loadEventos();
+    }
+
+    async function loadCultos() {
+        const response = await fetch(`${API_URL}/programacao`);
+        const data = await response.json();
+        cultosList.innerHTML = '';
+        if (data.cultos) {
+            data.cultos.forEach(culto => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span><strong>${culto.nome}</strong> - ${culto.dia} às ${culto.horario}</span>
+                    <button onclick="deleteItem('cultos', ${culto.id})">Excluir</button>
+                `;
+                cultosList.appendChild(li);
+            });
+        }
+    }
+
+    addCultoForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); 
+        const nome = document.getElementById('culto-nome').value;
+        const dia = document.getElementById('culto-dia').value;
+        const horario = document.getElementById('culto-horario').value;
+
+        await fetch(`${API_URL}/admin/cultos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-password': ADMIN_PASSWORD },
+            body: JSON.stringify({ nome, dia, horario })
+        });
+        
+        addCultoForm.reset();
+        loadCultos();
+    });
+
+    async function loadEventos() {
+        const response = await fetch(`${API_URL}/programacao`);
+        const data = await response.json();
+        eventosList.innerHTML = '';
+        if (data.eventos) {
+            data.eventos.forEach(evento => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span><strong>${evento.nome}</strong> - ${evento.data}</span>
+                    <button onclick="deleteItem('eventos', ${evento.id})">Excluir</button>
+                `;
+                eventosList.appendChild(li);
+            });
+        }
+    }
+
+    addEventoForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); 
+        const nome = document.getElementById('evento-nome').value;
+        const data = document.getElementById('evento-data').value;
+        const descricao = document.getElementById('evento-descricao').value;
+
+        await fetch(`${API_URL}/admin/eventos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-password': ADMIN_PASSWORD },
+            body: JSON.stringify({ nome, data, descricao })
+        });
+        
+        addEventoForm.reset();
+        loadEventos();
+    });
+    
+    async function deleteItem(type, id) {
+        if (!confirm(`Tem certeza que deseja excluir este item?`)) return;
+
+        await fetch(`${API_URL}/admin/${type}/${id}`, {
+            method: 'DELETE',
+            headers: { 'x-admin-password': ADMIN_PASSWORD }
+        });
+        
+        loadAllData();
+    }
+</script>
+</body>
+</html>

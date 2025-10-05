@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Programação - ADEVV</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #007BFF;
+            --dark-color: #1a1a1a;
+            --light-color: #FFFFFF;
+            --grey-color: #f0f2f5;
+            --border-color: #dcdfe6;
+            --text-light: #6b6b6b;
+        }
+        html, body {
+            width: 100%;
+            overflow-x: hidden;
+        }
+        .page-wrapper {
+            width: 100%;
+            overflow: hidden;
+        }
+        html { scrollbar-width: none; }
+        body::-webkit-scrollbar { display: none; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--grey-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        h1, h2, h3, p, span {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+        h1, h2, h3 {
+            font-family: "Anton", sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            word-break: break-word; 
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+            box-sizing: border-box;
+        }
+        header { text-align: center; margin-bottom: 3rem; border-bottom: 1px solid var(--border-color); padding-bottom: 2rem; }
+        header h1 { font-size: 4.5rem; color: var(--dark-color); line-height: 1.1; }
+        header p { font-size: 1rem; color: var(--text-light); max-width: 600px; margin: 0.5rem auto 0; }
+        .section-title { font-size: 2rem; text-align: center; margin-bottom: 2rem; }
+        .schedule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+        .schedule-item { background-color: var(--light-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
+        .schedule-item h3 { font-size: 1.75rem; color: var(--primary-color); margin-bottom: 0.5rem; }
+        .schedule-item .day { font-weight: 700; font-size: 1.1rem; color: var(--dark-color); margin-bottom: 0.5rem; display: block; }
+        .schedule-item p { font-size: 0.95rem; color: var(--text-light); }
+        .footer-nav { text-align: center; margin-top: 3rem; }
+        .back-link { display: inline-block; color: var(--text-light); text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { text-decoration: underline; }
+
+        @media (max-width: 640px) {
+            .container { padding: 2rem 1.5rem; }
+            header h1 { font-size: clamp(2.8rem, 14vw, 3.5rem); line-height: 1.2; }
+            header p { font-size: 0.95rem; }
+            .section-title { font-size: 1.8rem; }
+            .schedule-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="container">
+            <header>
+                <h1>Nossa Programação</h1>
+                <p>Faça parte da nossa comunidade! Estes são os nossos encontros semanais e eventos especiais.</p>
+            </header>
+            <main>
+                <h2 class="section-title">Nossos Cultos</h2>
+                <div class="schedule-grid" id="cultos-grid">
+                </div>
+
+                <h2 class="section-title">Próximos Eventos</h2>
+                <div class="schedule-grid" id="eventos-grid">
+                </div>
+            </main>
+            
+            <footer class="footer-nav">
+                <a href="index.html" class="back-link">← Voltar para a página de Cadastro</a>
+            </footer>
+        </div>
+    </div>
+
+<script>
+    window.onload = async () => {
+        // CORREÇÃO CRÍTICA: Usar caminho relativo para a API
+        const API_URL = '/api'; 
+        try {
+            const response = await fetch(`${API_URL}/programacao`);
+            if (!response.ok) { throw new Error('Não foi possível carregar a programação.'); }
+            const data = await response.json();
+
+            const cultosGrid = document.getElementById('cultos-grid');
+            const eventosGrid = document.getElementById('eventos-grid');
+            cultosGrid.innerHTML = '';
+            eventosGrid.innerHTML = '';
+
+            if (data.cultos && data.cultos.length > 0) {
+                data.cultos.forEach(culto => {
+                    const cultoItem = document.createElement('div');
+                    cultoItem.className = 'schedule-item';
+                    cultoItem.innerHTML = `<h3>${culto.nome}</h3><span class="day">${culto.dia} às ${culto.horario}</span>`;
+                    cultosGrid.appendChild(cultoItem);
+                });
+            } else {
+                cultosGrid.innerHTML = '<p style="text-align:center; color: var(--text-light);">Nenhum culto cadastrado no momento.</p>';
+            }
+
+            if (data.eventos && data.eventos.length > 0) {
+                data.eventos.forEach(evento => {
+                    const eventoItem = document.createElement('div');
+                    eventoItem.className = 'schedule-item';
+                    eventoItem.innerHTML = `<h3>${evento.nome}</h3><span class="day">${evento.data}</span><p>${evento.descricao || ''}</p>`;
+                    eventosGrid.appendChild(eventoItem);
+                });
+            } else {
+                eventosGrid.innerHTML = '<p style="text-align:center; color: var(--text-light);">Nenhum evento especial agendado no momento.</p>';
+            }
+        } catch (error) {
+            console.error('Erro ao carregar programação:', error);
+            document.getElementById('cultos-grid').innerHTML = '<p style="text-align:center; color: var(--text-light);">Não foi possível carregar a programação. Tente novamente mais tarde.</p>';
+        }
+    };
+
+    document.addEventListener('keydown', function(event) {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+            event.preventDefault();
+            window.location.href = 'admin.html';
+        }
+    });
+</script>
+</body>
+</html>
